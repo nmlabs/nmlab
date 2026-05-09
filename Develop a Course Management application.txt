@@ -1,0 +1,192 @@
+8, Develop a Course Management application
+
+Project Structure
+course-management
+│
+├── controller
+│   └── CourseController.java
+│
+├── entity
+│   └── Course.java
+│
+├── repository
+│   └── CourseRepository.java
+│
+├── service
+│   └── CourseService.java
+│
+├── CourseManagementApplication.java
+│
+└── application.properties
+
+a, Create Spring Boot Project
+Use Spring Initializr
+Dependencies
+Spring Web
+Spring Data JPA
+MySQL Driver
+Lombok (optional)
+
+b, application.properties
+spring.datasource.url=jdbc:mysql://localhost:3306/course_db
+spring.datasource.username=root
+spring.datasource.password=root
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+server.port=8080
+
+c, Create Entity Class
+Course.java
+package com.example.coursemanagement.entity;
+import jakarta.persistence.*;
+@Entity
+public class Course {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+    private String courseName;
+    private String trainer;
+    private double fees;
+    public Course() {
+    }
+    public Course(int id, String courseName, String trainer, double fees) {
+        this.id = id;
+        this.courseName = courseName;
+        this.trainer = trainer;
+        this.fees = fees;
+    }
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
+    }
+    public String getCourseName() {
+        return courseName;
+    }
+    public void setCourseName(String courseName) {
+        this.courseName = courseName;
+    }
+    public String getTrainer() {
+        return trainer;
+    }
+    public void setTrainer(String trainer) {
+        this.trainer = trainer;
+    }
+    public double getFees() {
+        return fees;
+    }
+    public void setFees(double fees) {
+        this.fees = fees;
+    }
+}
+
+d, Repository Layer
+CourseRepository.java
+package com.example.coursemanagement.repository;
+import com.example.coursemanagement.entity.Course;
+import org.springframework.data.jpa.repository.JpaRepository;
+public interface CourseRepository extends JpaRepository<Course, Integer> {
+}
+
+e, Service Layer
+CourseService.java
+package com.example.coursemanagement.service;
+import com.example.coursemanagement.entity.Course;
+import com.example.coursemanagement.repository.CourseRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.Optional;
+@Service
+public class CourseService {
+    @Autowired
+    private CourseRepository repository;
+    // Insert
+    public Course saveCourse(Course course) {
+        return repository.save(course);
+    }
+    // Display All
+    public List<Course> getAllCourses() {
+        return repository.findAll();
+    }
+    // Display By Id
+    public Optional<Course> getCourseById(int id) {
+        return repository.findById(id);
+    }
+    // Update
+    public Course updateCourse(int id, Course course) {
+        Course c = repository.findById(id).orElse(null);
+        if (c != null) {
+            c.setCourseName(course.getCourseName());
+            c.setTrainer(course.getTrainer());
+            c.setFees(course.getFees());
+            return repository.save(c);
+        }
+        return null;
+    }
+    // Delete
+    public String deleteCourse(int id) {
+        repository.deleteById(id);
+        return "Course Deleted Successfully";
+    }
+}
+
+f, Controller Layer
+CourseController.java
+package com.example.coursemanagement.controller;
+import com.example.coursemanagement.entity.Course;
+import com.example.coursemanagement.service.CourseService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Optional;
+@RestController
+@RequestMapping("/courses")
+public class CourseController {
+    @Autowired
+    private CourseService service;
+    // Insert
+    @PostMapping
+    public Course addCourse(@RequestBody Course course) {
+        return service.saveCourse(course);
+    }
+    // Display All
+    @GetMapping
+    public List<Course> getCourses() {
+        return service.getAllCourses();
+    }
+    // Display By Id
+    @GetMapping("/{id}")
+    public Optional<Course> getCourse(@PathVariable int id) {
+        return service.getCourseById(id);
+    }
+    // Update
+    @PutMapping("/{id}")
+    public Course updateCourse(@PathVariable int id,
+                               @RequestBody Course course) {
+        return service.updateCourse(id, course);
+    }
+    // Delete
+    @DeleteMapping("/{id}")
+    public String deleteCourse(@PathVariable int id) {
+        return service.deleteCourse(id);
+    }
+}
+
+g, Main Class
+CourseManagementApplication.java
+package com.example.coursemanagement;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+@SpringBootApplication
+public class CourseManagementApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(CourseManagementApplication.class, args);
+    }
+}
+
+h, MySQL Database
+Create database in MySQL:
+CREATE DATABASE course_db;

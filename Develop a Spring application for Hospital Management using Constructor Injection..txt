@@ -1,0 +1,138 @@
+12, Develop a Spring application for Hospital Management using Constructor Injection.
+
+Project Structure
+HospitalManagement/
+│
+├── src/main/java/com/example/hospital/
+│   ├── App.java
+│   ├── Hospital.java
+│   └── Patient.java
+│
+├── src/main/resources/
+│   └── applicationContext.xml
+│
+└── pom.xml
+
+
+1. pom.xml
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>HospitalManagement</artifactId>
+    <version>1.0</version>
+
+    <dependencies>
+        <!-- Spring Context -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>5.3.30</version>
+        </dependency>
+    </dependencies>
+
+</project>
+
+
+2. Patient.java
+package com.example.hospital;
+
+public class Patient {
+
+    private int patientId;
+    private String patientName;
+    private String disease;
+
+    // Constructor Injection
+    public Patient(int patientId, String patientName, String disease) {
+        this.patientId = patientId;
+        this.patientName = patientName;
+        this.disease = disease;
+    }
+
+    public void displayPatient() {
+        System.out.println("Patient ID   : " + patientId);
+        System.out.println("Patient Name : " + patientName);
+        System.out.println("Disease      : " + disease);
+    }
+}
+
+
+3. Hospital.java
+package com.example.hospital;
+
+public class Hospital {
+
+    private String hospitalName;
+    private Patient patient;
+
+    // Constructor Injection
+    public Hospital(String hospitalName, Patient patient) {
+        this.hospitalName = hospitalName;
+        this.patient = patient;
+    }
+
+    public void showDetails() {
+
+        System.out.println("Hospital Name : " + hospitalName);
+        System.out.println("---------------------------");
+
+        patient.displayPatient();
+    }
+}
+
+
+4. applicationContext.xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- Patient Bean -->
+    <bean id="patientBean"
+          class="com.example.hospital.Patient">
+
+        <constructor-arg value="101"/>
+        <constructor-arg value="Arun"/>
+        <constructor-arg value="Fever"/>
+
+    </bean>
+
+    <!-- Hospital Bean -->
+    <bean id="hospitalBean"
+          class="com.example.hospital.Hospital">
+
+        <constructor-arg value="Apollo Hospital"/>
+        <constructor-arg ref="patientBean"/>
+
+    </bean>
+
+</beans>
+
+
+5. App.java
+package com.example.hospital;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class App {
+
+    public static void main(String[] args) {
+
+        ApplicationContext context =
+                new ClassPathXmlApplicationContext("applicationContext.xml");
+
+        Hospital hospital =
+                (Hospital) context.getBean("hospitalBean");
+
+        hospital.showDetails();
+    }
+}

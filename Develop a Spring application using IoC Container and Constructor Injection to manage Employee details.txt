@@ -1,0 +1,81 @@
+1, Develop a Spring application using IoC Container and Constructor Injection to manage Employee details.
+
+a, Project Structure
+SpringEmployeeApp
+│
+├── src/main/java
+│   └── com/example
+│       ├── Employee.java
+│       └── MainApp.java
+│
+├── src/main/resources
+│   └── applicationContext.xml
+│
+└── pom.xml
+
+b, Maven Dependency (pom.xml)
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.example</groupId>
+    <artifactId>SpringEmployeeApp</artifactId>
+    <version>1.0</version>
+    <dependencies>
+        <!-- Spring Core -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>5.3.30</version>
+        </dependency>
+    </dependencies>
+</project>
+
+c, Employee Class (Employee.java)
+package com.example;
+public class Employee {
+    private int empId;
+    private String empName;
+    private double salary;
+    // Constructor Injection
+    public Employee(int empId, String empName, double salary) {
+        this.empId = empId;
+        this.empName = empName;
+        this.salary = salary;
+    }
+    public void display() {
+        System.out.println("Employee ID : " + empId);
+        System.out.println("Employee Name : " + empName);
+        System.out.println("Salary : " + salary);
+    }
+}
+
+d, Spring Configuration File (applicationContext.xml)
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <!-- IoC Container manages this bean -->
+    <bean id="emp"
+          class="com.example.Employee">
+        <!-- Constructor Injection -->
+        <constructor-arg value="101"/>
+        <constructor-arg value="Yuvi"/>
+        <constructor-arg value="55000"/>
+    </bean>
+</beans>
+
+e, Main Class (MainApp.java)
+package com.example;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+public class MainApp {
+    public static void main(String[] args) {
+        // Creating IoC Container
+        ApplicationContext context =
+                new ClassPathXmlApplicationContext("applicationContext.xml");
+        // Getting Bean from Container
+        Employee emp = (Employee) context.getBean("emp");
+        emp.display();
+    }
+}

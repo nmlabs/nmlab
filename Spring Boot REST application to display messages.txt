@@ -1,0 +1,46 @@
+2, Create a Spring Boot REST application to display messages.
+
+a, Project Structure
+message-app
+ └── src
+     └── main
+         ├── java
+         │    └── com/example/demo
+         │          ├── DemoApplication.java
+         │          └── MessageController.java
+         └── resources
+               └── application.properties
+
+b, DemoApplication.java
+package com.example.demo;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+@SpringBootApplication
+public class DemoApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
+}
+
+c, MessageController.java
+package com.example.demo;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+@RestController
+public class MessageController {
+    @GetMapping("/message")
+    public String getMessage() {
+        return "Welcome to Spring Boot REST API";
+    }
+}
+
+d, application.properties
+spring.application.name=message-app
+server.port=8080
+5. Maven Dependency (pom.xml)
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+</dependencies>

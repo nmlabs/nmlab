@@ -1,0 +1,205 @@
+10, Develop a Spring Boot application to update product prices. 
+
+Project Structure
+product-price-update/
+│── src/main/java/com/example/product/
+│   ├── controller/
+│   │      ProductController.java
+│   ├── entity/
+│   │      Product.java
+│   ├── repository/
+│   │      ProductRepository.java
+│   ├── service/
+│   │      ProductService.java
+│   └── ProductApplication.java
+│
+│── src/main/resources/
+│      application.properties
+│
+│── pom.xml
+
+a, Create Database
+CREATE DATABASE productdb;
+
+USE productdb;
+
+CREATE TABLE product (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100),
+    price DOUBLE
+);
+
+INSERT INTO product(name, price)
+VALUES ('Laptop', 50000),
+       ('Mobile', 20000);
+
+b, pom.xml
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>product-price-update</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.5</version>
+    </parent>
+
+    <dependencies>
+
+        <!-- Spring Boot Starter Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Spring Data JPA -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- MySQL Driver -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+        </dependency>
+
+    </dependencies>
+
+</project>
+
+c, application.properties
+spring.datasource.url=jdbc:mysql://localhost:3306/productdb
+spring.datasource.username=root
+spring.datasource.password=root
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+server.port=8080
+
+d, Product Entity
+Product.java
+package com.example.product.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+public class Product {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    private String name;
+    private double price;
+
+    // Getters and Setters
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+}
+
+e, Repository Layer
+ProductRepository.java
+package com.example.product.repository;
+
+import com.example.product.entity.Product;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ProductRepository extends JpaRepository<Product, Integer> {
+}
+
+f, Service Layer
+ProductService.java
+package com.example.product.service;
+
+import com.example.product.entity.Product;
+import com.example.product.repository.ProductRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class ProductService {
+
+    @Autowired
+    private ProductRepository repository;
+
+    // Update Product Price
+    public Product updatePrice(int id, double price) {
+
+        Product product = repository.findById(id).orElse(null);
+
+        if(product != null) {
+            product.setPrice(price);
+            return repository.save(product);
+        }
+
+        return null;
+    }
+}
+
+g, Controller Layer
+ProductController.java
+package com.example.product.controller;
+
+import com.example.product.entity.Product;
+import com.example.product.service.ProductService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/products")
+public class ProductController {
+
+    @Autowired
+    private ProductService service;
+
+    // Update Product Price
+    @PutMapping("/{id}/{price}")
+    public Product updateProductPrice(@PathVariable int id,
+                                      @PathVariable double price) {
+
+        return service.updatePrice(id, price);
+    }
+}
+
+h, Main Class
+ProductApplication.java
+package com.example.product;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ProductApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(ProductApplication.class, args);
+    }
+}

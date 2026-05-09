@@ -1,0 +1,224 @@
+7, Create a Spring Boot REST application for Library Management.
+
+Project Structure
+library-management
+│
+├── src/main/java/com/example/library
+│   ├── LibraryManagementApplication.java
+│   ├── controller
+│   │     └── BookController.java
+│   ├── model
+│   │     └── Book.java
+│   ├── repository
+│   │     └── BookRepository.java
+│   └── service
+│         └── BookService.java
+│
+├── src/main/resources
+│      └── application.properties
+│
+└── pom.xml
+
+a, Create Spring Boot Project
+Create project using:
+Spring Web
+Spring Data JPA
+MySQL Driver
+Lombok (optional)
+You can create it using Spring Initializr
+
+b, pom.xml
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.example</groupId>
+    <artifactId>library-management</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.0</version>
+    </parent>
+    <dependencies>
+        <!-- Spring Boot Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <!-- Spring Data JPA -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <!-- MySQL Driver -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+</project>
+
+c, application.properties
+spring.datasource.url=jdbc:mysql://localhost:3306/librarydb
+spring.datasource.username=root
+spring.datasource.password=root
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+server.port=8080
+
+d, Book Entity
+Book.java
+package com.example.library.model;
+import jakarta.persistence.*;
+@Entity
+public class Book {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String title;
+    private String author;
+    private double price;
+    public Book() {
+    }
+    public Book(Long id, String title, String author, double price) {
+        this.id = id;
+        this.title = title;
+        this.author = author;
+        this.price = price;
+    }
+    public Long getId() {
+        return id;
+    }
+    public void setId(Long id) {
+        this.id = id;
+    }
+    public String getTitle() {
+        return title;
+    }
+    public void setTitle(String title) {
+        this.title = title;
+    }
+    public String getAuthor() {
+        return author;
+    }
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+    public double getPrice() {
+        return price;
+    }
+    public void setPrice(double price) {
+        this.price = price;
+    }
+}
+e, Repository Layer
+BookRepository.java
+package com.example.library.repository;
+import com.example.library.model.Book;
+import org.springframework.data.jpa.repository.JpaRepository;
+public interface BookRepository extends JpaRepository<Book, Long> {
+}
+
+f, Service Layer
+BookService.java
+package com.example.library.service;
+import com.example.library.model.Book;
+import com.example.library.repository.BookRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.Optional;
+@Service
+public class BookService {
+    @Autowired
+    private BookRepository repository;
+    // Add Book
+    public Book saveBook(Book book) {
+        return repository.save(book);
+    }
+    // Get All Books
+    public List<Book> getAllBooks() {
+        return repository.findAll();
+    }
+    // Get Book By ID
+    public Optional<Book> getBookById(Long id) {
+        return repository.findById(id);
+    }
+    // Update Book
+    public Book updateBook(Long id, Book book) {
+        Book existingBook = repository.findById(id).orElse(null);
+        if (existingBook != null) {
+            existingBook.setTitle(book.getTitle());
+            existingBook.setAuthor(book.getAuthor());
+            existingBook.setPrice(book.getPrice());
+            return repository.save(existingBook);
+        }
+        return null;
+    }
+    // Delete Book
+    public String deleteBook(Long id) {
+        repository.deleteById(id);
+        return "Book Deleted Successfully";
+    }
+}
+
+g, Controller Layer
+BookController.java
+package com.example.library.controller;
+import com.example.library.model.Book;
+import com.example.library.service.BookService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Optional;
+@RestController
+@RequestMapping("/books")
+public class BookController {
+    @Autowired
+    private BookService service;
+    // Add Book
+    @PostMapping
+    public Book addBook(@RequestBody Book book) {
+        return service.saveBook(book);
+    }
+    // Get All Books
+    @GetMapping
+    public List<Book> getBooks() {
+        return service.getAllBooks();
+    }
+    // Get Book By ID
+    @GetMapping("/{id}")
+    public Optional<Book> getBook(@PathVariable Long id) {
+        return service.getBookById(id);
+    }
+    // Update Book
+    @PutMapping("/{id}")
+    public Book updateBook(@PathVariable Long id,
+                           @RequestBody Book book) {
+        return service.updateBook(id, book);
+    }
+    // Delete Book
+    @DeleteMapping("/{id}")
+    public String deleteBook(@PathVariable Long id) {
+        return service.deleteBook(id);
+    }
+}
+
+h, Main Class
+LibraryManagementApplication.java
+package com.example.library;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+@SpringBootApplication
+public class LibraryManagementApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(LibraryManagementApplication.class, args);
+    }
+}
+
+i, MySQL Database
+Create database in MySQL:
+CREATE DATABASE librarydb;

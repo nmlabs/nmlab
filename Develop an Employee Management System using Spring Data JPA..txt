@@ -1,0 +1,224 @@
+9, Develop an Employee Management System using Spring Data JPA.
+
+a, Create Spring Boot Project
+Use Spring Initializr
+ with these dependencies:
+Spring Web
+Spring Data JPA
+MySQL Driver
+Lombok
+
+b, Project Structure
+employee-management
+│
+├── src/main/java/com/example/employeemanagement
+│   ├── EmployeeManagementApplication.java
+│   ├── controller
+│   │     └── EmployeeController.java
+│   ├── entity
+│   │     └── Employee.java
+│   ├── repository
+│   │     └── EmployeeRepository.java
+│   └── service
+│         └── EmployeeService.java
+│
+└── src/main/resources
+      └── application.properties
+
+c, application.properties
+spring.datasource.url=jdbc:mysql://localhost:3306/employeedb
+spring.datasource.username=root
+spring.datasource.password=root
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+server.port=8080
+
+d, Employee Entity
+Employee.java
+package com.example.employeemanagement.entity;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+@Entity
+public class Employee {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+    private String name;
+    private String department;
+    private double salary;
+    public Employee() {
+    }
+    public Employee(int id, String name, String department, double salary) {
+        this.id = id;
+        this.name = name;
+        this.department = department;
+        this.salary = salary;
+    }
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
+    }
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public String getDepartment() {
+        return department;
+    }
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+    public double getSalary() {
+        return salary;
+    }
+    public void setSalary(double salary) {
+        this.salary = salary;
+    }
+}
+
+e, Repository Layer
+EmployeeRepository.java
+package com.example.employeemanagement.repository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.employeemanagement.entity.Employee;
+
+public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
+
+}
+
+f, Service Layer
+EmployeeService.java
+package com.example.employeemanagement.service;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.example.employeemanagement.entity.Employee;
+import com.example.employeemanagement.repository.EmployeeRepository;
+
+@Service
+public class EmployeeService {
+
+    @Autowired
+    private EmployeeRepository repository;
+
+    // Save Employee
+    public Employee saveEmployee(Employee employee) {
+        return repository.save(employee);
+    }
+
+    // Get All Employees
+    public List<Employee> getAllEmployees() {
+        return repository.findAll();
+    }
+
+    // Get Employee By ID
+    public Employee getEmployeeById(int id) {
+        return repository.findById(id).orElse(null);
+    }
+
+    // Update Employee
+    public Employee updateEmployee(int id, Employee employee) {
+
+        Employee emp = repository.findById(id).orElse(null);
+
+        if (emp != null) {
+            emp.setName(employee.getName());
+            emp.setDepartment(employee.getDepartment());
+            emp.setSalary(employee.getSalary());
+
+            return repository.save(emp);
+        }
+
+        return null;
+    }
+
+    // Delete Employee
+    public String deleteEmployee(int id) {
+
+        repository.deleteById(id);
+
+        return "Employee Deleted Successfully";
+    }
+}
+
+g, Controller Layer
+EmployeeController.java
+package com.example.employeemanagement.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import com.example.employeemanagement.entity.Employee;
+import com.example.employeemanagement.service.EmployeeService;
+
+@RestController
+@RequestMapping("/employee")
+public class EmployeeController {
+
+    @Autowired
+    private EmployeeService service;
+
+    // Insert Employee
+    @PostMapping("/save")
+    public Employee saveEmployee(@RequestBody Employee employee) {
+        return service.saveEmployee(employee);
+    }
+
+    // Get All Employees
+    @GetMapping("/all")
+    public List<Employee> getAllEmployees() {
+        return service.getAllEmployees();
+    }
+
+    // Get Employee By ID
+    @GetMapping("/{id}")
+    public Employee getEmployeeById(@PathVariable int id) {
+        return service.getEmployeeById(id);
+    }
+
+    // Update Employee
+    @PutMapping("/update/{id}")
+    public Employee updateEmployee(@PathVariable int id,
+                                   @RequestBody Employee employee) {
+
+        return service.updateEmployee(id, employee);
+    }
+
+    // Delete Employee
+    @DeleteMapping("/delete/{id}")
+    public String deleteEmployee(@PathVariable int id) {
+
+        return service.deleteEmployee(id);
+    }
+}
+
+h, Main Class
+EmployeeManagementApplication.java
+package com.example.employeemanagement;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class EmployeeManagementApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(EmployeeManagementApplication.class, args);
+    }
+}
+
+i, MySQL Database
+Open MySQL and run:
+CREATE DATABASE employeedb;

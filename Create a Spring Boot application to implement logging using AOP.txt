@@ -1,0 +1,109 @@
+6, Create a Spring Boot application to implement logging using AOP.
+
+Project Structure
+springboot-aop-logging
+│
+├── src/main/java/com/example/aoplogging
+│   ├── AopLoggingApplication.java
+│   ├── controller/
+│   │     └── EmployeeController.java
+│   ├── service/
+│   │     └── EmployeeService.java
+│   └── aspect/
+│         └── LoggingAspect.java
+│
+├── src/main/resources
+│     └── application.properties
+│
+└── pom.xml
+
+a, pom.xml
+Add required dependencies.
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.example</groupId>
+    <artifactId>aoplogging</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.5</version>
+    </parent>
+    <dependencies>
+        <!-- Spring Boot Starter Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <!-- Spring Boot Starter AOP -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+    </dependencies>
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+</project>
+
+b, Main Application Class
+AopLoggingApplication.java
+package com.example.aoplogging;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+@SpringBootApplication
+public class AopLoggingApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(AopLoggingApplication.class, args);
+    }
+}
+
+c, Service Class
+EmployeeService.java
+package com.example.aoplogging.service;
+import org.springframework.stereotype.Service;
+@Service
+public class EmployeeService {
+    public String getEmployee() {
+        return "Employee Details Retrieved";
+    }
+}
+
+d, Controller Class
+EmployeeController.java
+package com.example.aoplogging.controller;
+import com.example.aoplogging.service.EmployeeService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+@RestController
+public class EmployeeController {
+    @Autowired
+    private EmployeeService employeeService;
+    @GetMapping("/employee")
+    public String getEmployee() {
+        return employeeService.getEmployee();
+    }
+}
+
+e, Aspect Class for Logging
+LoggingAspect.java
+package com.example.aoplogging.aspect;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.springframework.stereotype.Component;
+@Aspect
+@Component
+public class LoggingAspect {
+    @Before("execution(* com.example.aoplogging.service.*.*(..))")
+    public void logMethodCall(JoinPoint joinPoint) {
+        System.out.println("Method Called: " + joinPoint.getSignature().getName());
+    }
+}
+
+f, application.properties
+spring.application.name=aoplogging

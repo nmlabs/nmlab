@@ -1,0 +1,170 @@
+11, Implement AOP logging in a Banking application
+
+a, Project Structure
+banking-aop-app
+│
+├── src/main/java/com/example/bank
+│   ├── BankingApplication.java
+│   ├── controller
+│   │     └── BankController.java
+│   ├── service
+│   │     └── BankService.java
+│   ├── aspect
+│   │     └── LoggingAspect.java
+│
+├── src/main/resources
+│   └── application.properties
+│
+└── pom.xml
+
+b, pom.xml
+
+Add required dependencies.
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>banking-aop-app</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.5</version>
+    </parent>
+
+    <dependencies>
+
+        <!-- Spring Boot Starter Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Spring Boot AOP -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
+    </dependencies>
+
+</project>
+
+c, Main Class
+BankingApplication.java
+package com.example.bank;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class BankingApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(BankingApplication.class, args);
+    }
+}
+
+d, Service Class
+BankService.java
+package com.example.bank.service;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class BankService {
+
+    public String deposit(double amount) {
+        return "Amount Deposited: Rs." + amount;
+    }
+
+    public String withdraw(double amount) {
+        return "Amount Withdrawn: Rs." + amount;
+    }
+
+    public double checkBalance() {
+        return 50000.0;
+    }
+}
+
+e, Controller Class
+BankController.java
+package com.example.bank.controller;
+
+import com.example.bank.service.BankService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/bank")
+public class BankController {
+
+    @Autowired
+    private BankService bankService;
+
+    @GetMapping("/deposit/{amount}")
+    public String deposit(@PathVariable double amount) {
+        return bankService.deposit(amount);
+    }
+
+    @GetMapping("/withdraw/{amount}")
+    public String withdraw(@PathVariable double amount) {
+        return bankService.withdraw(amount);
+    }
+
+    @GetMapping("/balance")
+    public double balance() {
+        return bankService.checkBalance();
+    }
+}
+
+f, AOP Logging Aspect
+LoggingAspect.java
+package com.example.bank.aspect;
+
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.*;
+import org.springframework.stereotype.Component;
+
+@Aspect
+@Component
+public class LoggingAspect {
+
+    // Before method execution
+    @Before("execution(* com.example.bank.service.BankService.*(..))")
+    public void logBefore(JoinPoint joinPoint) {
+
+        System.out.println("Method Started: "
+                + joinPoint.getSignature().getName());
+    }
+
+    // After method execution
+    @After("execution(* com.example.bank.service.BankService.*(..))")
+    public void logAfter(JoinPoint joinPoint) {
+
+        System.out.println("Method Ended: "
+                + joinPoint.getSignature().getName());
+    }
+
+    // After returning value
+    @AfterReturning(
+            pointcut = "execution(* com.example.bank.service.BankService.*(..))",
+            returning = "result")
+    public void logResult(JoinPoint joinPoint, Object result) {
+
+        System.out.println("Method: "
+                + joinPoint.getSignature().getName());
+
+        System.out.println("Returned Value: " + result);
+    }
+}
+
+g, application.properties
+spring.application.name=banking-aop-app
+server.port=8080

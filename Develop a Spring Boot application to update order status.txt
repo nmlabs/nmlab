@@ -1,0 +1,255 @@
+14, Develop a Spring Boot application to update order status
+
+1. Project Structure
+order-status-app
+│
+├── src/main/java/com/example/orderstatus
+│   ├── controller
+│   │     └── OrderController.java
+│   ├── entity
+│   │     └── Order.java
+│   ├── repository
+│   │     └── OrderRepository.java
+│   ├── service
+│   │     └── OrderService.java
+│   └── OrderStatusApplication.java
+│
+├── src/main/resources
+│   └── application.properties
+│
+└── pom.xml
+
+
+2. pom.xml
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>orderstatus</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.5</version>
+    </parent>
+
+    <dependencies>
+
+        <!-- Spring Boot Starter -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Spring Data JPA -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- MySQL Driver -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+    </dependencies>
+
+</project>
+
+
+3. application.properties
+spring.datasource.url=jdbc:mysql://localhost:3306/orderdb
+spring.datasource.username=root
+spring.datasource.password=root
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+server.port=8080
+
+
+4. Order Entity
+Order.java
+package com.example.orderstatus.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "orders")
+public class Order {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int orderId;
+
+    private String customerName;
+    private String productName;
+    private String status;
+
+    // Constructors
+    public Order() {
+    }
+
+    public Order(String customerName, String productName, String status) {
+        this.customerName = customerName;
+        this.productName = productName;
+        this.status = status;
+    }
+
+    // Getters and Setters
+    public int getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(int orderId) {
+        this.orderId = orderId;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+}
+
+
+5. Repository Layer
+OrderRepository.java
+package com.example.orderstatus.repository;
+
+import com.example.orderstatus.entity.Order;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface OrderRepository extends JpaRepository<Order, Integer> {
+}
+
+
+6. Service Layer
+OrderService.java
+package com.example.orderstatus.service;
+
+import com.example.orderstatus.entity.Order;
+import com.example.orderstatus.repository.OrderRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+@Service
+public class OrderService {
+
+    @Autowired
+    private OrderRepository repository;
+
+    // Save Order
+    public Order saveOrder(Order order) {
+        return repository.save(order);
+    }
+
+    // Update Order Status
+    public Order updateOrderStatus(int id, String status) {
+
+        Optional<Order> optionalOrder = repository.findById(id);
+
+        if (optionalOrder.isPresent()) {
+            Order order = optionalOrder.get();
+            order.setStatus(status);
+            return repository.save(order);
+        }
+
+        return null;
+    }
+
+    // Get Order
+    public Order getOrder(int id) {
+        return repository.findById(id).orElse(null);
+    }
+}
+
+
+7. Controller Layer
+OrderController.java
+package com.example.orderstatus.controller;
+
+import com.example.orderstatus.entity.Order;
+import com.example.orderstatus.service.OrderService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/orders")
+public class OrderController {
+
+    @Autowired
+    private OrderService service;
+
+    // Add Order
+    @PostMapping("/add")
+    public Order addOrder(@RequestBody Order order) {
+        return service.saveOrder(order);
+    }
+
+    // Update Order Status
+    @PutMapping("/updateStatus/{id}")
+    public String updateStatus(@PathVariable int id,
+                               @RequestParam String status) {
+
+        Order order = service.updateOrderStatus(id, status);
+
+        if (order != null) {
+            return "Order status updated successfully";
+        } else {
+            return "Order not found";
+        }
+    }
+
+    // Get Order Details
+    @GetMapping("/{id}")
+    public Order getOrder(@PathVariable int id) {
+        return service.getOrder(id);
+    }
+}
+
+
+8. Main Class
+OrderStatusApplication.java
+package com.example.orderstatus;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class OrderStatusApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(OrderStatusApplication.class, args);
+    }
+}
+
+
+9. MySQL Database
+
+Create database in MySQL:
+
+CREATE DATABASE orderdb;

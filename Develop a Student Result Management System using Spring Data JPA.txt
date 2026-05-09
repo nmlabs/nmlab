@@ -1,0 +1,301 @@
+13, Develop a Student Result Management System using Spring Data JPA
+
+Project Structure
+student-result-management/
+│
+├── src/main/java/com/example/resultmanagement
+│   ├── controller
+│   │     └── StudentController.java
+│   ├── entity
+│   │     └── Student.java
+│   ├── repository
+│   │     └── StudentRepository.java
+│   ├── service
+│   │     └── StudentService.java
+│   └── ResultManagementApplication.java
+│
+├── src/main/resources
+│   └── application.properties
+│
+└── pom.xml
+
+
+Step 1: Create Spring Boot Project
+
+Create project using:
+
+Spring Web
+Spring Data JPA
+MySQL Driver
+
+Using: Spring Initializr
+
+
+Step 2: pom.xml
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>resultmanagement</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.5</version>
+    </parent>
+
+    <dependencies>
+
+        <!-- Spring Boot Starter Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Spring Data JPA -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- MySQL Driver -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+    </dependencies>
+
+</project>
+
+
+Step 3: application.properties
+spring.datasource.url=jdbc:mysql://localhost:3306/studentdb
+spring.datasource.username=root
+spring.datasource.password=root
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+server.port=8080
+
+
+Step 4: Create Entity Class
+Student.java
+package com.example.resultmanagement.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "student_result")
+public class Student {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    private String name;
+    private int tamil;
+    private int english;
+    private int maths;
+
+    private int total;
+    private double average;
+    private String result;
+
+    public Student() {
+    }
+
+    public Student(int id, String name, int tamil, int english, int maths) {
+        this.id = id;
+        this.name = name;
+        this.tamil = tamil;
+        this.english = english;
+        this.maths = maths;
+
+        calculateResult();
+    }
+
+    public void calculateResult() {
+        total = tamil + english + maths;
+        average = total / 3.0;
+
+        if (tamil >= 35 && english >= 35 && maths >= 35) {
+            result = "PASS";
+        } else {
+            result = "FAIL";
+        }
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getTamil() {
+        return tamil;
+    }
+
+    public void setTamil(int tamil) {
+        this.tamil = tamil;
+        calculateResult();
+    }
+
+    public int getEnglish() {
+        return english;
+    }
+
+    public void setEnglish(int english) {
+        this.english = english;
+        calculateResult();
+    }
+
+    public int getMaths() {
+        return maths;
+    }
+
+    public void setMaths(int maths) {
+        this.maths = maths;
+        calculateResult();
+    }
+
+    public int getTotal() {
+        return total;
+    }
+
+    public double getAverage() {
+        return average;
+    }
+
+    public String getResult() {
+        return result;
+    }
+}
+
+
+Step 5: Repository Layer
+StudentRepository.java
+package com.example.resultmanagement.repository;
+
+import com.example.resultmanagement.entity.Student;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface StudentRepository extends JpaRepository<Student, Integer> {
+}
+
+
+Step 6: Service Layer
+StudentService.java
+package com.example.resultmanagement.service;
+
+import com.example.resultmanagement.entity.Student;
+import com.example.resultmanagement.repository.StudentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class StudentService {
+
+    @Autowired
+    private StudentRepository repository;
+
+    public Student saveStudent(Student student) {
+        student.calculateResult();
+        return repository.save(student);
+    }
+
+    public List<Student> getAllStudents() {
+        return repository.findAll();
+    }
+
+    public Student getStudentById(int id) {
+        return repository.findById(id).orElse(null);
+    }
+
+    public String deleteStudent(int id) {
+        repository.deleteById(id);
+        return "Student Deleted Successfully";
+    }
+}
+
+
+Step 7: Controller Layer
+StudentController.java
+package com.example.resultmanagement.controller;
+
+import com.example.resultmanagement.entity.Student;
+import com.example.resultmanagement.service.StudentService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/students")
+public class StudentController {
+
+    @Autowired
+    private StudentService service;
+
+    @PostMapping
+    public Student addStudent(@RequestBody Student student) {
+        return service.saveStudent(student);
+    }
+
+    @GetMapping
+    public List<Student> getStudents() {
+        return service.getAllStudents();
+    }
+
+    @GetMapping("/{id}")
+    public Student getStudent(@PathVariable int id) {
+        return service.getStudentById(id);
+    }
+
+    @DeleteMapping("/{id}")
+    public String deleteStudent(@PathVariable int id) {
+        return service.deleteStudent(id);
+    }
+}
+
+
+Step 8: Main Class
+ResultManagementApplication.java
+package com.example.resultmanagement;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ResultManagementApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(ResultManagementApplication.class, args);
+    }
+}
+
+
+Step 9: Create Database
+
+Open MySQL:
+
+CREATE DATABASE studentdb;
